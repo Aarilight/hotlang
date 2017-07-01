@@ -1,16 +1,25 @@
 {
     "name": "hotlang",
     "version": "0.0.1",
-    "description": "It's hot. Not scalding, like HTML.",
-    "license": "MIT",
-    "author": {
-        "name": "Mackenzie McClane"
-    },
+    
     "main": "out/hot.js",
+    "dependencies": {
+        "mz":"2.6.0",
+        "glob": "7.1.2",
+        "glob-promise": "3.1.0",
+        "commondir": "1.0.1",
+        "mkdirp-promise": "5.0.1"
+    },
     "devDependencies": {
-        "@types/node": "7.0.22"
+        "@types/node": "7.0.22",
+        "@types/mz": "0.0.31",
+        "@types/minimatch": "2.0.29",
+        "@types/glob": "5.0.30"
     },
     "typings": "out/hot.d.ts",
+    "bin":{
+        "hot": "./out/hot.js"
+    },
 
     "repository": {
         "type": "git",
@@ -19,5 +28,9 @@
     "keywords": [
         "hot", "markup", "html", "superscript"
     ],
-    "bugs": { "url" : "https://github.com/Aarilight/hotlang/issues" }
+    "description": "It's hot. Not scalding, like HTML.",
+    "license": "MIT",
+    "author": {
+        "name": "Mackenzie McClane"
+    }
 }
