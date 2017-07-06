@@ -104,9 +104,7 @@ class Hot {
 			out = replaceExt(this.file, "html");
 		}
 		this.outFile = out;
-		console.log(this.file, this.outFile);
 		const result = await this.parse();
-		console.log(out, writeFile);
 		if (writeFile) {
 			await mkdirp(path.dirname(out));
 			await fs.writeFile(out, result);
@@ -343,8 +341,6 @@ class Hot {
 				const outDir = path.dirname(this.outFile);
 				const relativePath = path.relative(outDir, path.resolve(outDir, importPath));
 
-				console.log(importPath, ext);
-
 				switch (ext) {
 					case "js": {
 						return `<script src="${relativePath}"${resultAttributes}></script>`;
@@ -391,19 +387,19 @@ module Hot {
 					const files = config.files ?
 						await glob(config.files, { cwd: compilePath, absolute: true })
 						: [path.resolve(compilePath, config.file)];
-					config.srcRoot = path.resolve(compilePath, config.outDir ? commondir(files) : path.dirname(config.file));
+					config.srcRoot = path.resolve(compilePath, config.outDir ? (files.length > 1 ? commondir(files) : path.dirname(files[0])) : path.dirname(config.file));
 
 					for (const file of files) {
 						const hot = new Hot(config);
 
 						let outPath: string;
 						if (config.outDir) {
-							outPath = path.resolve(compilePath, config.outDir, file.slice(config.srcRoot.length));
+							outPath = path.resolve(compilePath, config.outDir, "./" + replaceExt(file.slice(config.srcRoot.length), "html"));
 						} else if (config.out) {
 							outPath = path.resolve(compilePath, config.out);
 						}
 
-						console.log(outPath);
+						debug && console.log(file, "=>", outPath);
 
 						hot.setFile(file).catch((err) => {
 							console.log(debug ? err : err.message);
