@@ -105,12 +105,10 @@ class Hot {
 		}
 		this.outFile = out;
 		const result = await this.parse();
-		console.log("compile stuff", [this.file, out, writeFile, this.outFile, result]);
 		if (writeFile) {
 			await mkdirp(path.dirname(out));
 			await fs.writeFile(out, result);
 		}
-		console.log("yea i think i definitely did it");
 		return result;
 	}
 
@@ -363,7 +361,6 @@ class Hot {
 
 						const hot = new Hot(this.config);
 						await hot.setFile(importPath);
-						console.log("import srcroot stuff", [path.resolve(this.config.srcRoot), path.resolve(importPath)]);
 						const srcRoot = commondir([path.resolve(this.config.srcRoot), path.resolve(importPath)]);
 						let result = await hot.compile(replaceExt(path.join(srcRoot, importPath.slice(srcRoot.length)), "html"), !!(this.config.compileAll && this.outFile));
 						if ("template" in args) {
