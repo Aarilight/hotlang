@@ -132,6 +132,7 @@ describe("Hot", () => {
 
 		it("should import other files", async () => {
 			await Hot.compile("tests/import.hot");
+			console.log(await fs.readdir("tests"));
 			const result = await fs.readFile("tests/import.html", "utf8");
 			await fs.unlink("tests/import.html");
 			expect(result).eq("<span>\n\tHello, world!\n</span>");
