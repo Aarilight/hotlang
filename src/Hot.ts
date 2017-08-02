@@ -105,11 +105,12 @@ class Hot {
 		}
 		this.outFile = out;
 		const result = await this.parse();
-		console.log("compile stuff", [this.file, out, writeFile, this.outFile]);
+		console.log("compile stuff", [this.file, out, writeFile, this.outFile, result]);
 		if (writeFile) {
 			await mkdirp(path.dirname(out));
 			await fs.writeFile(out, result);
 		}
+		console.log("yea i think i definitely did it");
 		return result;
 	}
 
