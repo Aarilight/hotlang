@@ -105,6 +105,7 @@ class Hot {
 		}
 		this.outFile = out;
 		const result = await this.parse();
+		console.log(this.file, out, writeFile, this.outFile);
 		if (writeFile) {
 			await mkdirp(path.dirname(out));
 			await fs.writeFile(out, result);
