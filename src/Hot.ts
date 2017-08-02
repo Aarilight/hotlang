@@ -362,8 +362,8 @@ class Hot {
 
 						const hot = new Hot(this.config);
 						await hot.setFile(importPath);
-						console.log("import srcroot stuff", [this.config.srcRoot, importPath]);
-						const srcRoot = commondir([this.config.srcRoot, importPath]);
+						console.log("import srcroot stuff", [path.resolve(this.config.srcRoot), path.resolve(importPath)]);
+						const srcRoot = commondir([path.resolve(this.config.srcRoot), path.resolve(importPath)]);
 						let result = await hot.compile(replaceExt(path.join(srcRoot, importPath.slice(srcRoot.length)), "html"), !!(this.config.compileAll && this.outFile));
 						if ("template" in args) {
 							result = `<template${resultAttributes}>${result}</template>`;
