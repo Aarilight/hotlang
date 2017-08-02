@@ -177,7 +177,8 @@ class Hot {
 		const line = this.line;
 		this.consume(Regex.Whitespace);
 		while ((this.indent > untilIndent || line == this.line) && this.index < this.input.length) {
-			result += "\n" + await this.parseExpression();
+			const expr = await this.parseExpression();
+			if (expr.length > 0) result += "\n" + expr;
 			this.consume(Regex.Whitespace);
 		}
 		return result.slice(1);
@@ -275,7 +276,7 @@ class Hot {
 		return result;
 	}
 	private parseStringBlock (untilIndent: number) {
-		let result = "";
+		const result: string[] = [];
 		this.consume(Regex.WhitespaceUntilNewLine);
 		while (true) {
 			let line = "";
@@ -288,15 +289,15 @@ class Hot {
 			if (this.char != "\n" && this.indent <= untilIndent) break;
 			for (; this.char != "\n"; line += this.char, this.index++);
 			this.index++;
-			result += `<line>${line}</line>`;
+			result.push(line);
 		}
-		return result.replace(/(<line><\/line>)+$/, "");
+		return result.join("<br>");
 	}
 	private parseComment () {
 		if (this.consume(Regex.CommentBlock))
 			return this.parseCommentBlock(this.indent);
 		this.consumeChar(Char.Comment);
-		for (; this.char != "\n"; this.index++);
+		for (; this.char && this.char != "\n"; this.index++);
 		return "";
 	}
 	private parseCommentBlock (untilIndent: number) {
@@ -304,14 +305,13 @@ class Hot {
 		while (true) {
 			this.indent = 0;
 			for (; this.char == "\t"; this.index++ , this.indent++);
+			if (this.char == Char.Comment && this.consume(Regex.CommentBlock)) break;
 			if (this.char != "\n" && this.indent <= untilIndent) break;
-			for (; this.char != "\n"; this.index++);
+			for (; this.char && this.char != "\n"; this.index++);
 			this.index++;
 		}
 		return "";
 	}
-
-	private typescriptProject: any;
 
 	private async parseCall () {
 		const index = this.index;
@@ -321,7 +321,7 @@ class Hot {
 			case "import": {
 				const args = attributes as ImportArgs;
 				let importPath = args.src;
-				let ext = args.language || args.lang || path.extname(importPath);
+				let ext = args.language || args.lang || path.extname(importPath).slice(1);
 				if (!ext) {
 					if ("script" in args) ext = "js";
 					else if ("style" in args) ext = "css";
@@ -331,15 +331,22 @@ class Hot {
 					importPath += "." + ext;
 				}
 
-				if (!path.isAbsolute(importPath)) {
-					importPath = path.join(path.dirname(this.file), importPath);
+				let outDir: string, relativePath = importPath;
+
+				if (this.file) {
+					const isWebAddress = /https?:\/\//.test(importPath);
+					if (!isWebAddress && !path.isAbsolute(importPath)) {
+						importPath = path.join(path.dirname(this.file), importPath);
+					}
+
+					outDir = path.dirname(this.outFile);
+
+					if (!isWebAddress)
+						relativePath = path.relative(outDir, path.resolve(outDir, importPath));
 				}
 
 				let resultAttributes = makeAttributeString(args, "language", "lang", "script", "style", "template", "src");
 				if (resultAttributes.length > 0) resultAttributes = " " + resultAttributes;
-
-				const outDir = path.dirname(this.outFile);
-				const relativePath = path.relative(outDir, path.resolve(outDir, importPath));
 
 				switch (ext) {
 					case "js": {
@@ -349,9 +356,13 @@ class Hot {
 						return `<link rel="stylesheet" href="${relativePath}"${resultAttributes}/>`;
 					}
 					case "hot": {
+						if (!this.file)
+							throw new Error("Can't import a hot file when parsing a hot string.");
+
 						const hot = new Hot(this.config);
 						await hot.setFile(importPath);
-						let result = await hot.compile(replaceExt(path.join(outDir, importPath.slice(this.config.srcRoot.length)), "html"), !!(this.config.compileAll && this.outFile));
+						const srcRoot = commondir([this.config.srcRoot, importPath]);
+						let result = await hot.compile(replaceExt(path.join(srcRoot, importPath.slice(srcRoot.length)), "html"), !!(this.config.compileAll && this.outFile));
 						if ("template" in args) {
 							result = `<template${resultAttributes}>${result}</template>`;
 						}
@@ -381,40 +392,51 @@ module Hot {
 			const stats = await fs.stat(compilePath);
 			if (stats.isDirectory()) {
 				let configs = await getConfig(compilePath);
-				if (!Array.isArray(configs)) configs = [configs ? configs : { files: "**/*.hot" }];
+				if (!Array.isArray(configs)) configs = [configs ? configs : { files: "./*.hot" }];
+
+				const promises: Promise<any>[] = [];
 
 				for (const config of configs as Config[]) {
 					const files = config.files ?
 						await glob(config.files, { cwd: compilePath, absolute: true })
 						: [path.resolve(compilePath, config.file)];
-					config.srcRoot = path.resolve(compilePath, config.outDir ? (files.length > 1 ? commondir(files) : path.dirname(files[0])) : path.dirname(config.file));
+					if (files.length > 0) {
 
-					for (const file of files) {
-						const hot = new Hot(config);
+						config.srcRoot = path.resolve(compilePath, config.outDir ? (files.length > 1 ? commondir(files) : path.dirname(files[0])) : path.dirname(files[0]));
 
-						let outPath: string;
-						if (config.outDir) {
-							outPath = path.resolve(compilePath, config.outDir, "./" + replaceExt(file.slice(config.srcRoot.length), "html"));
-						} else if (config.out) {
-							outPath = path.resolve(compilePath, config.out);
-						}
+						for (const file of files) {
+							const hot = new Hot(config);
 
-						debug && console.log(file, "=>", outPath);
+							let outPath: string;
+							if (config.outDir) {
+								outPath = path.resolve(compilePath, config.outDir, "./" + replaceExt(file.slice(config.srcRoot.length), "html"));
+							} else if (config.out) {
+								outPath = path.resolve(compilePath, config.out);
+							}
 
-						hot.setFile(file).catch((err) => {
-							console.log(debug ? err : err.message);
-						}).then(() => {
-							hot.compile(outPath).catch((err) => {
+							debug && console.log(file, "=>", outPath);
+
+							promises.push(hot.setFile(file).catch((err) => {
 								console.log(debug ? err : err.message);
-							});
-						});
+							}).then(() => {
+								return hot.compile(outPath).catch((err) => {
+									console.log(debug ? err : err.message);
+								});
+							}));
+						}
+					} else {
+						console.log("Found no files to compile.");
 					}
 				}
 
+				await Promise.all(promises);
+
 			} else {
-				const hot = new Hot();
+				const hot = new Hot({
+					srcRoot: path.dirname(compilePath),
+				});
 				await hot.setFile(compilePath);
-				hot.compile().catch((err) => {
+				return hot.compile().catch((err) => {
 					console.log(debug ? err : err.message);
 				});
 			}
