@@ -56,7 +56,7 @@ If set to true, all Hot files imported are compiled into this directory. (Not ju
 
 # The Language
 
-The point of Hot is to make HTML simpler and easier to maintain. As a result this can reduce the temptation to do too much document generation in JavaScript, and therefore keep your Wocument/scripts/styles separate.
+The point of Hot is to make HTML simpler and easier to maintain. As a result this can reduce the temptation to do too much document generation in JavaScript, and therefore keep your document/scripts/styles separate.
 
 The syntax of Hot is inspired by CSS selectors. Here's a simple example:
 ```hot
