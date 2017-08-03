@@ -362,7 +362,11 @@ class Hot {
 						const hot = new Hot(this.config);
 						await hot.setFile(importPath);
 						const srcRoot = commondir([path.resolve(this.config.srcRoot), path.resolve(importPath)]);
-						let result = await hot.compile(replaceExt(path.join(srcRoot, importPath.slice(srcRoot.length)), "html"), !!(this.config.compileAll && this.outFile));
+
+						const relativeOutPath = path.relative(srcRoot, replaceExt(importPath, "html"));
+						const outPath = path.resolve(srcRoot, "./" + (this.config.outDir || ""), relativeOutPath);
+
+						let result = await hot.compile(outPath, !!(this.config.compileAll && this.outFile));
 						if ("template" in args) {
 							result = `<template${resultAttributes}>${result}</template>`;
 						}
@@ -401,17 +405,21 @@ module Hot {
 						await glob(config.files, { cwd: compilePath, absolute: true })
 						: [path.resolve(compilePath, config.file)];
 					if (files.length > 0) {
+						// files is an array of filenames to compile
+						// srcRootRelative is set to the common directory of all given files
+						const srcRootRelative = config.outDir && files.length > 1 ? commondir(files) : path.dirname(files[0]);
 
-						config.srcRoot = path.resolve(compilePath, config.outDir ? (files.length > 1 ? commondir(files) : path.dirname(files[0])) : path.dirname(files[0]));
+						config.srcRoot = path.resolve(compilePath, srcRootRelative);
 
 						for (const file of files) {
 							const hot = new Hot(config);
 
 							let outPath: string;
-							if (config.outDir) {
-								outPath = path.resolve(compilePath, config.outDir, "./" + replaceExt(file.slice(config.srcRoot.length), "html"));
-							} else if (config.out) {
+							if (config.out) {
 								outPath = path.resolve(compilePath, config.out);
+							} else if (config.outDir) {
+								const relativeFile = path.relative(config.srcRoot, file);
+								outPath = path.resolve(compilePath, config.outDir, "./" + replaceExt(relativeFile, "html"));
 							}
 
 							debug && console.log(file, "=>", outPath);

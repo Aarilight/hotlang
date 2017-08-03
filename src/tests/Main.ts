@@ -103,25 +103,21 @@ describe("Hot", () => {
 			`,
 		};
 
-		before(async () => {
+		beforeEach(async () => {
 			const promises: Promise<any>[] = [];
-			await mkdirp("tests/secret");
+			await mkdirp("tests/secret/super-secret");
 			for (const file in files)
 				promises.push(fs.writeFile(`tests/${file}`, files[file as keyof typeof files]));
 			await Promise.all(promises);
 		});
 
-		const unlink = true;
-
-		if (unlink) {
-			after(async () => {
-				const promises: Promise<any>[] = [];
-				for (const file in files)
-					promises.push(fs.unlink(`tests/${file}`));
-				await Promise.all(promises);
-				await rimraf("tests");
-			});
-		}
+		afterEach(async () => {
+			const promises: Promise<any>[] = [];
+			for (const file in files)
+				promises.push(fs.unlink(`tests/${file}`));
+			await Promise.all(promises);
+			await rimraf("tests");
+		});
 
 		it("should compile a file", async () => {
 			await Hot.compile("tests/hello.hot");
@@ -242,6 +238,24 @@ describe("Hot", () => {
 				await fs.unlink("tests/hello.html");
 
 				await expect(fs.unlink("tests/import.html")).rejected;
+
+				await rmconfig();
+			});
+
+			it("should compile all imported files to a different directory", async () => {
+				await config({
+					file: "secret/secret.hot",
+					compileAll: true,
+					out: "secret/secret.html",
+					outDir: "secret/super-secret"
+				});
+
+				await Hot.compile("tests");
+
+				expect(await fs.readFile("tests/secret/secret.html", "utf8")).eq("<secret></secret>\n<span>\n\tHello, world!\n</span>");
+				await fs.unlink("tests/secret/secret.html");
+				expect(await fs.readFile("tests/secret/super-secret/hello.html", "utf8")).eq("<span>\n\tHello, world!\n</span>");
+				await fs.unlink("tests/secret/super-secret/hello.html");
 
 				await rmconfig();
 			});
