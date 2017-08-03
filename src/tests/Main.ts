@@ -6,10 +6,8 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 import fs = require("mz/fs");
-import thenify = require("thenify");
-
-const rimraf = thenify(require("rimraf")) as (dir: string) => Promise<void>;
-const mkdirp = thenify(require("mkdirp")) as (dir: string) => Promise<void>;
+import mkdirp = require("mkdirp-promise");
+import rimraf = require("rmfr");
 
 import Hot = require("../Hot");
 
