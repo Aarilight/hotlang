@@ -99,6 +99,9 @@ describe("Hot", () => {
 				secret
 				!import[src: "../hello"]
 			`,
+			"secret/multi.hot": `
+				!import[src: "../*"]
+			`,
 		};
 
 		beforeEach(async () => {
@@ -149,6 +152,13 @@ describe("Hot", () => {
 				fs.unlink("tests/hello.html"),
 				fs.unlink("tests/import.html"),
 			]);
+		});
+
+		it("should import all files matching a glob", async () => {
+			await Hot.compile("tests/secret/multi.hot");
+			const result = await fs.readFile("tests/secret/multi.html", "utf8");
+			await fs.unlink("tests/secret/multi.html");
+			expect(result).eq("<span>\n\tHello, world!\n</span>\n<span>\n\tHello, world!\n</span>");
 		});
 
 		describe("using the hotconfig.json", () => {

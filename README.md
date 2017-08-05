@@ -126,6 +126,12 @@ You can also import other kinds of files:
 <link rel="stylesheet" href="./main.css"/>
 ```
 
+### Importing all hot files in a folder
+```hot
+!import[src: "./folder/*"]
+```
+All `hot` files in the folder are compiled and inserted into the resulting document. The order of the imported files is not guaranteed.
+
 ## Block strings
 
 ```hot

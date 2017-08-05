@@ -336,7 +336,7 @@ class Hot {
 				if (this.file) {
 					const isWebAddress = /https?:\/\//.test(importPath);
 					if (!isWebAddress && !path.isAbsolute(importPath)) {
-						importPath = path.join(path.dirname(this.file), importPath);
+						importPath = path.resolve(path.dirname(this.file), importPath);
 					}
 
 					outDir = path.dirname(this.outFile);
@@ -359,18 +359,26 @@ class Hot {
 						if (!this.file)
 							throw new Error("Can't import a hot file when parsing a hot string.");
 
-						const hot = new Hot(this.config);
-						await hot.setFile(importPath);
-						const srcRoot = commondir([path.resolve(this.config.srcRoot), path.resolve(importPath)]);
+						const files = await glob(importPath, { cwd: importPath, absolute: true });
 
-						const relativeOutPath = path.relative(srcRoot, replaceExt(importPath, "html"));
-						const outPath = path.resolve(srcRoot, "./" + (this.config.outDir || ""), relativeOutPath);
+						let result = "";
+						for (const file of files) {
 
-						let result = await hot.compile(outPath, !!(this.config.compileAll && this.outFile));
-						if ("template" in args) {
-							result = `<template${resultAttributes}>${result}</template>`;
+							const hot = new Hot(this.config);
+							await hot.setFile(file);
+							const srcRoot = commondir([path.resolve(this.config.srcRoot), path.resolve(file)]);
+
+							const relativeOutPath = path.relative(srcRoot, replaceExt(file, "html"));
+							const outPath = path.resolve(srcRoot, "./" + (this.config.outDir || ""), relativeOutPath);
+
+							let fileResult = await hot.compile(outPath, !!(this.config.compileAll && this.outFile));
+							if ("template" in args) {
+								fileResult = `<template${resultAttributes}>${fileResult}</template>`;
+							}
+							result += fileResult + "\n";
 						}
-						return result;
+
+						return result.slice(0, -1);
 					}
 				}
 			}
