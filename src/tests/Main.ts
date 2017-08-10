@@ -14,8 +14,8 @@ import Hot = require("../Hot");
 async function expectHot (hot: string, html: string) {
 	expect(await Hot.parse(hot)).eq(html);
 }
-function expectHotError (hot: string, message: string, done: Function) {
-	expect(Hot.parse(hot)).rejectedWith(Error, message).notify(done);
+async function expectHotError (hot: string, message: string) {
+	await expect(Hot.parse(hot)).rejectedWith(Error, message);
 }
 
 
@@ -83,12 +83,10 @@ describe("Hot", () => {
 					div: "hay"
 			`, "<div>\n\thay\n</div>");
 		});
-		it("importing", (done) => {
-			expectHot(`!import[style; src: "./test"]`, `<link rel="stylesheet" href="./test.css"/>`).then(() => {
-				return expectHot(`!import[script; src: "./test"]`, `<script src="./test.js"></script>`);
-			}).then(() => {
-				expectHotError(`!import[src: "./test"]`, `Can't import a hot file when parsing a hot string.`, done);
-			});
+		it("importing", async () => {
+			await expectHot(`!import[style; src: "./test"]`, `<link rel="stylesheet" href="./test.css"/>`);
+			await expectHot(`!import[script; src: "./test"]`, `<script src="./test.js"></script>`);
+			await expectHotError(`!import[src: "./test"]`, `Can't import a hot file when parsing a hot string.`);
 		});
 	});
 	describe("compile", () => {
@@ -245,7 +243,7 @@ describe("Hot", () => {
 				expect(await fs.readFile("tests/hello.html", "utf8")).eq("<span>\n\tHello, world!\n</span>");
 				await fs.unlink("tests/hello.html");
 
-				await expect(fs.unlink("tests/import.html")).rejected;
+				await expect(fs.unlink("tests/import.html")).rejectedWith(/^ENOENT: /);
 
 				await rmconfig();
 			});
