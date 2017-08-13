@@ -27,7 +27,7 @@ function makeAttributeString (attributes: { [key: string]: any }, ...blacklist: 
 const Regex = {
 	Whitespace: /^\s+/,
 	WhitespaceUntilNewLine: /^[ \t]*\r?\n/,
-	Word: /^[a-z][a-z0-9-]*/,
+	Word: /^[a-zA-Z][a-zA-Z0-9-]*/,
 	StringBlock: /^"""/,
 	CommentBlock: /^###/,
 
