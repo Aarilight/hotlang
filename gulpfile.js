@@ -42,5 +42,5 @@ gulp.task("compile-test", () => {
 });
 
 gulp.task("watch", ["compile-test"], () => {
-	gulp.watch("./src/**/*.ts", ["compile-test"]);
+	gulp.watch(["./src/**/*.ts"], ["compile-test"]);
 });

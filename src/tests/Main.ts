@@ -62,8 +62,9 @@ describe("Hot", () => {
 					This is a
 					block string.
 				"""
-					div: "hay"
-			`, "This is a<br>block string.\n<div>\n\thay\n</div>");
+					div: "hay"`,
+				"This is a<br>block string.\n<div>\n\thay\n</div>"
+			);
 		});
 		it("comment", async () => {
 			await expectHot("# comment", "");
@@ -80,8 +81,9 @@ describe("Hot", () => {
 					This is a
 					block comment.
 				###
-					div: "hay"
-			`, "<div>\n\thay\n</div>");
+					div: "hay"`,
+				"<div>\n\thay\n</div>"
+			);
 		});
 		it("importing", async () => {
 			await expectHot(`!import[style; src: "./test"]`, `<link rel="stylesheet" href="./test.css"/>`);

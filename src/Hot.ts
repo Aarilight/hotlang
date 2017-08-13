@@ -287,9 +287,10 @@ class Hot {
 			}
 			if (this.char == Char.String && this.consume(Regex.StringBlock)) break;
 			if (this.char != "\n" && this.indent <= untilIndent) break;
-			for (; this.char != "\n"; line += this.char, this.index++);
-			this.index++;
+			for (; this.char && this.char != "\n"; line += this.char, this.index++);
 			result.push(line);
+			if (!this.char) break;
+			this.index++;
 		}
 		return result.join("<br>");
 	}
@@ -308,6 +309,7 @@ class Hot {
 			if (this.char == Char.Comment && this.consume(Regex.CommentBlock)) break;
 			if (this.char != "\n" && this.indent <= untilIndent) break;
 			for (; this.char && this.char != "\n"; this.index++);
+			if (!this.char) break;
 			this.index++;
 		}
 		return "";
