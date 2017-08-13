@@ -1,6 +1,6 @@
 {
     "name": "hotlang",
-    "version": "1.0.3",
+    "version": "1.0.4",
     
     "dependencies": {
         "mz":"2.6.0",
