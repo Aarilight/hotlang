@@ -85,20 +85,20 @@ class Hot {
 		this.config = config;
 	}
 
-	async setFile (file: string) {
+	public async setFile (file: string) {
 		this.file = file;
 		this.input = await fs.readFile(file, "utf8");
 		return true;
 	}
 
-	async parse (hotText?: string) {
+	public async parse (hotText?: string) {
 		if (hotText) this.input = hotText;
 		this.line = 0;
 		this.index = 0;
 		this.indent = 0;
 		return (await this.parseChildren(-1)).replace(/\r/g, "");
 	}
-	async compile (out?: string, writeFile = true) {
+	public async compile (out?: string, writeFile = true) {
 		if (!out) {
 			if (!this.file && writeFile) throw new Error("Cannot compile automatically, no filename to compile to.");
 			out = replaceExt(this.file, "html");
@@ -161,15 +161,20 @@ class Hot {
 	}
 
 	private throw (message = "Error", index = this.index) {
+		this.printLocation();
 		const split = this.input.slice(0, index).split("\n");
 		const lineNumber = split.length;
 		const column = split[lineNumber - 1].length;
+		throw new Error(`${message} at [${lineNumber}:${column}]`);
+	}
+
+	private printLocation (index = this.index) {
+		const split = this.input.slice(0, index).split("\n");
 		const beginningOfLine = split.pop();
 		const line = beginningOfLine + this.input.slice(index).split("\n")[0];
 		console.log(line);
 		console.log(" ".repeat(beginningOfLine.match(/^\t*/)[0].length * 3 + beginningOfLine.length) + "^");
 		console.log("\n");
-		throw new Error(`${message} at [${lineNumber}:${column}]`);
 	}
 
 	private async parseChildren (untilIndent: number) {
@@ -298,21 +303,32 @@ class Hot {
 		if (this.consume(Regex.CommentBlock))
 			return this.parseCommentBlock(this.indent);
 		this.consumeChar(Char.Comment);
-		for (; this.char && this.char != "\n"; this.index++);
-		return "";
+		const keep = this.consumeChar(Char.Comment);
+		let result = "";
+		for (; this.char && this.char != "\n" && (!keep || (result += this.char)); this.index++);
+		return result ? `<!-- ${result.trim()} -->` : result;
 	}
 	private parseCommentBlock (untilIndent: number) {
-		this.consume(Regex.WhitespaceUntilNewLine);
-		while (true) {
-			this.indent = 0;
-			for (; this.char == "\t"; this.index++ , this.indent++);
-			if (this.char == Char.Comment && this.consume(Regex.CommentBlock)) break;
-			if (this.char != "\n" && this.indent <= untilIndent) break;
-			for (; this.char && this.char != "\n"; this.index++);
+		const keep = this.consumeChar(Char.Comment);
+		const wasNewline = this.consume(Regex.WhitespaceUntilNewLine);
+		let result = "";
+		const start = this.index;
+		CommentLoop: while (true) {
+			if (this.index == start && !wasNewline) {
+				this.indent = untilIndent;
+			} else {
+				this.indent = 0;
+				for (; this.char == "\t"; this.index++ , this.indent++);
+				if (this.char == Char.Comment && this.consume(Regex.CommentBlock)) break;
+			}
+			if (this.char != "\n" && this.indent <= untilIndent && this.index != start) break;
+			for (; this.char && this.char != "\n" && (!keep || this.char == Char.Comment || (result += this.char)); this.index++)
+				if (this.char == Char.Comment && this.consume(Regex.CommentBlock)) break CommentLoop;
+			if (keep) result += "\n";
 			if (!this.char) break;
 			this.index++;
 		}
-		return "";
+		return result ? `<!--\n${result.trim()}\n-->` : result;
 	}
 
 	private async parseCall () {

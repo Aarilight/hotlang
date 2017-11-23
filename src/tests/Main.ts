@@ -63,12 +63,16 @@ describe("Hot", () => {
 					block string.
 				"""
 					div: "hay"`,
-				"This is a<br>block string.\n<div>\n\thay\n</div>"
+				"This is a<br>block string.\n<div>\n\thay\n</div>",
 			);
 		});
 		it("comment", async () => {
 			await expectHot("# comment", "");
 			await expectHot("div # comment", "<div></div>");
+		});
+		it("comment, kept", async () => {
+			await expectHot("## comment", "<!-- comment -->");
+			await expectHot("div ## comment\ndiv", "<div></div>\n<!-- comment -->\n<div></div>");
 		});
 		it("comment block", async () => {
 			await expectHot(`
@@ -82,7 +86,32 @@ describe("Hot", () => {
 					block comment.
 				###
 					div: "hay"`,
-				"<div>\n\thay\n</div>"
+				"<div>\n\thay\n</div>",
+			);
+			await expectHot(`
+				### This is a
+					block comment. ### div: "hay"`,
+				"<div>\n\thay\n</div>",
+			);
+		});
+		it("comment block, kept", async () => {
+			await expectHot(`
+				####
+					This is a
+					block comment.
+			`, "<!--\nThis is a\nblock comment.\n-->");
+			await expectHot(`
+				####
+					This is a
+					block comment.
+				###
+					div: "hay"`,
+				"<!--\nThis is a\nblock comment.\n-->\n<div>\n\thay\n</div>",
+			);
+			await expectHot(`
+				#### This is a
+					block comment. ### div: "hay"`,
+				"<!--\nThis is a\nblock comment.\n-->\n<div>\n\thay\n</div>",
 			);
 		});
 		it("importing", async () => {
@@ -217,7 +246,7 @@ describe("Hot", () => {
 			it("should compile files to the specified out directory", async () => {
 				await config({
 					files: "**/*.hot",
-					outDir: "foobar"
+					outDir: "foobar",
 				});
 
 				await Hot.compile("tests");
@@ -255,7 +284,7 @@ describe("Hot", () => {
 					file: "secret/secret.hot",
 					compileAll: true,
 					out: "secret/secret.html",
-					outDir: "secret/super-secret"
+					outDir: "secret/super-secret",
 				});
 
 				await Hot.compile("tests");

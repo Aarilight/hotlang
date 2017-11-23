@@ -86,6 +86,59 @@ div[no-val; also-no-val]
 <div no-val also-no-val></div>
 ```
 
+Single-line and block comments:
+
+```hot
+# comment
+###
+	Block comment!
+	Allows multiple lines.
+```
+
+```hot
+### Block comments can also start on the same line.
+div: "And be only one line long."
+```
+
+You can also end a block comment prematurely/explicitly by using the triple hash, either on the same line or the following.
+
+```hot
+###
+	Block comment! ###
+```
+
+```hot	
+###
+	Block comment!
+###
+```
+
+You can keep comments in the output by appending an additional hash to them. For example:
+
+```hot
+## This comment appears in the output!
+```
+
+```html
+<!-- This comment appears in the output! -->
+```
+
+Or, with a block:
+
+```hot
+####
+	This comment appears
+	in the output!
+```
+
+```html
+<!--
+This comment appears
+in the output!	
+-->
+```
+
+
 ## Importing other files
 
 ```hot
