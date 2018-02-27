@@ -54,6 +54,7 @@ const Char = {
 	EscapeNewline: "n",
 	EscapeTab: "t",
 	ElementChildren: ":",
+	ElementChild: "=",
 	Call: "!",
 };
 
@@ -177,16 +178,16 @@ class Hot {
 		console.log("\n");
 	}
 
-	private async parseChildren (untilIndent: number) {
+	private async parseChildren (untilIndent: number, join = "\n") {
 		let result = "";
 		const line = this.line;
 		this.consume(Regex.Whitespace);
 		while ((this.indent > untilIndent || line == this.line) && this.index < this.input.length) {
 			const expr = await this.parseExpression();
-			if (expr.length > 0) result += "\n" + expr;
+			if (expr.length > 0) result += join + expr;
 			this.consume(Regex.Whitespace);
 		}
-		return result.slice(1);
+		return result.slice(join.length);
 	}
 	private async parseExpression () {
 		this.consume(Regex.Whitespace);
@@ -230,7 +231,11 @@ class Hot {
 		});
 		result += ">";
 		if (this.consumeChar(Char.ElementChildren)) {
-			result += "\n" + tabbify(await this.parseChildren(this.indent)) + "\n";
+			if (this.consumeChar(Char.ElementChild)) {
+				result += await this.parseChildren(this.indent, "");
+			} else {
+				result += "\n" + tabbify(await this.parseChildren(this.indent)) + "\n";
+			}
 		}
 		result += `</${elementName}>`;
 		return result;

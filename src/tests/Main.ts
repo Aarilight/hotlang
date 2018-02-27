@@ -44,6 +44,17 @@ describe("Hot", () => {
 		it("element with string", async () => {
 			await expectHot(`span: "Hello, world!"`, "<span>\n\tHello, world!\n</span>");
 		});
+		it("element with only-children", async () => {
+			await expectHot(`span:= "Hello, world!"`, "<span>Hello, world!</span>");
+		});
+		it("element with multiple only-children", async () => {
+			await expectHot(`
+				span:=
+					"Hello,"
+					span: "world!"
+					span: "wow"
+			`, "<span>Hello,<span>\n\tworld!\n</span><span>\n\twow\n</span></span>");
+		});
 		it("element with child and string", async () => {
 			await expectHot(`
 				span:
