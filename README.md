@@ -64,7 +64,9 @@ button#title.giant: "Amazing App Name"
 ```
 This compiles to this html:
 ```html
-<button id="title" class="giant">Amazing App Name</button>
+<button id="title" class="giant">
+	Amazing App Name
+</button>
 ```
 
 Attributes are slightly different than with CSS selectors:
@@ -73,7 +75,9 @@ button[title: "Home", aria-label: "Home"]: "Home"
 ```
 
 ```html
-<button title="Home" aria-label="Home">Home</button>
+<button title="Home" aria-label="Home">
+	Home
+</button>
 ```
 
 To do an attribute without a value, format like this:
@@ -84,6 +88,28 @@ div[no-val; also-no-val]
 
 ```html
 <div no-val also-no-val></div>
+```
+
+To create an element with no whitespace between its children:
+
+```hot
+div:= "I'm all alone!"
+```
+
+```html
+<div>I'm all alone!</div>
+```
+
+```hot
+div:= 
+	"I'm sandwiched here!"
+	span: "muahhahaha"
+```
+
+```html
+<div>I'm sandwiched here!<span>
+	muahhahaha
+</span></div>
 ```
 
 Single-line and block comments:
