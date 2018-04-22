@@ -357,14 +357,14 @@ class Hot {
 				let outDir: string, relativePath = importPath;
 
 				if (this.file) {
-					const isWebAddress = /https?:\/\//.test(importPath);
-					if (!isWebAddress && !path.isAbsolute(importPath)) {
+					const isAbsolute = /https?:\/\//.test(importPath) || path.isAbsolute(importPath) || importPath[0] == "/";
+					if (!isAbsolute) {
 						importPath = path.resolve(path.dirname(this.file), importPath);
 					}
 
 					outDir = path.dirname(this.outFile);
 
-					if (!isWebAddress)
+					if (!isAbsolute)
 						relativePath = path.relative(outDir, path.resolve(outDir, importPath));
 				}
 

@@ -126,9 +126,14 @@ describe("Hot", () => {
 			);
 		});
 		it("importing", async () => {
+			// relative
 			await expectHot(`!import[style; src: "./test"]`, `<link rel="stylesheet" href="./test.css"/>`);
 			await expectHot(`!import[script; src: "./test"]`, `<script src="./test.js"></script>`);
 			await expectHotError(`!import[src: "./test"]`, `Can't import a hot file when parsing a hot string.`);
+
+			// absolute
+			await expectHot(`!import[style; src: "/test"]`, `<link rel="stylesheet" href="/test.css"/>`);
+			await expectHot(`!import[script; src: "/test"]`, `<script src="/test.js"></script>`);
 		});
 	});
 	describe("compile", () => {
@@ -142,6 +147,10 @@ describe("Hot", () => {
 			"secret/multi.hot": `
 				!import[src: "../*"]
 			`,
+			"secret/resources.hot": `
+				!import[style; src: "/test"]
+				!import[script; src: "/test"]
+			`
 		};
 
 		beforeEach(async () => {
@@ -307,6 +316,17 @@ describe("Hot", () => {
 
 				await rmconfig();
 			});
+
+			it("should not mangle absolute paths", async () => {
+				await config({
+					file: "secret/resources.hot",
+				});
+
+				await Hot.compile("tests");
+
+				expect(await fs.readFile("tests/secret/resources.html", "utf8"))
+					.eq("<link rel=\"stylesheet\" href=\"/test.css\"/>\n<script src=\"/test.js\"></script>");
+			})
 		});
 
 	});
