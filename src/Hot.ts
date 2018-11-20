@@ -355,14 +355,14 @@ class Hot {
 					else if ("style" in args) ext = "css";
 					else ext = "hot";
 				}
-				if (path.extname(importPath) == "") {
+				if (path.extname(importPath) == "" && !/^https?:\/\//.test(importPath)) {
 					importPath += "." + ext;
 				}
 
 				let outDir: string, relativePath = importPath;
 
 				if (this.file) {
-					const isAbsolute = /https?:\/\//.test(importPath) || path.isAbsolute(importPath) || importPath[0] == "/";
+					const isAbsolute = /^https?:\/\//.test(importPath) || path.isAbsolute(importPath) || importPath[0] == "/";
 					if (!isAbsolute) {
 						importPath = path.resolve(path.dirname(this.file), importPath);
 					}

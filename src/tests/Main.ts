@@ -134,6 +134,10 @@ describe("Hot", () => {
 			// absolute
 			await expectHot(`!import[style; src: "/test"]`, `<link rel="stylesheet" href="/test.css"/>`);
 			await expectHot(`!import[script; src: "/test"]`, `<script src="/test.js"></script>`);
+
+			// web
+			await expectHot(`!import[style; src: "http://blahblooblee.com/coolcss"]`, `<link rel="stylesheet" href="http://blahblooblee.com/coolcss"/>`);
+			await expectHot(`!import[script; src: "https://blahblooblee.com/cooljs"]`, `<script src="https://blahblooblee.com/cooljs"></script>`);
 		});
 	});
 	describe("compile", () => {
