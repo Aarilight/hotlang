@@ -1,52 +1,59 @@
 {
     "name": "hotlang",
-    "version": "1.3.0",
-    
+    "version": "1.4.0",
     "dependencies": {
-        "mz":"2.6.0",
-        "glob": "7.1.2",
-        "glob-promise": "3.1.0",
+        "mz": "2.7.0",
+        "glob": "7.1.3",
+        "glob-promise": "3.4.0",
         "commondir": "1.0.1",
         "mkdirp-promise": "5.0.1",
-		"@types/node": "8.0.17"
+        "@types/node": "8.0.17"
     },
     "main": "out/Hot.js",
     "types": "out/Hot.d.ts",
     "bin": {
         "hot": "./out/Hot.js"
     },
-    
     "description": "It's hot. Not scalding, like HTML.",
     "keywords": [
-        "hot", "markup", "html", "superscript"
+        "hot",
+        "markup",
+        "html",
+        "superscript"
     ],
     "license": "MIT",
-
     "repository": {
         "type": "git",
         "url": "https://github.com/Yuudaari/hotlang"
     },
-    
     "devDependencies": {
         "rmfr": "1.0.3",
         "@types/mz": "0.0.31",
         "@types/minimatch": "2.0.29",
         "@types/glob": "5.0.30",
-              
-        
-		"gulp": "3.9.1",
+        "gulp": "^4.0.0",
         "gulp-plumber": "1.1.0",
         "merge2": "1.1.0",
-		"run-sequence": "2.1.0",
-		"typescript": "2.4.2",
-		"gulp-typescript": "3.2.1",
-		"mocha": "3.4.2",
-		"gulp-mocha": "4.3.1",
-		"chai": "4.1.0",
-		"chai-as-promised": "7.1.1",
-		"@types/request-promise": "4.1.36",
-		"@types/mocha": "2.2.41",
-		"@types/chai": "4.0.1",
-		"@types/chai-as-promised": "0.0.31"
+        "run-sequence": "2.1.0",
+        "typescript": "2.4.2",
+        "gulp-typescript": "3.2.1",
+        "ts-node": "7.0.1",
+        "mocha": "3.4.2",
+        "del": "3.0.0",
+        "gulp-mocha": "4.3.1",
+        "chai": "4.1.0",
+        "chai-as-promised": "7.1.1",
+        "@types/request-promise": "4.1.36",
+        "@types/chai": "4.0.1",
+        "@types/chai-as-promised": "0.0.31",
+        "@types/gulp": "4.0.5",
+        "@types/gulp-plumber": "0.0.32",
+        "@types/mocha": "5.2.5",
+        "@types/gulp-mocha": "0.0.32",
+        "@types/merge2": "1.1.4",
+        "@types/run-sequence": "0.0.30",
+        "@types/del": "3.0.1",
+        "@types/commondir": "1.0.0",
+        "@types/mkdirp-promise": "5.0.0"
     }
 }

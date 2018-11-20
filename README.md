@@ -187,9 +187,25 @@ Resulting html of compiling `hello.hot`:
 </div>
 ```
 
-You can also import other kinds of files:
+### Passing content in to imported hot files
+```hot
+# helloworld.hot
+!import[src: "./hello"]: "world"
+```
 
-### Javascript
+```hot
+# hello.hot
+span:= "Hello, " !content "!"
+```
+
+```html
+# helloworld.html
+<span>Hello, world!</span>
+```
+
+### Importing Stylesheets and Scripts:
+
+#### Javascript
 ```hot
 !import[script; src: "./main"]
 ```
@@ -197,7 +213,7 @@ You can also import other kinds of files:
 <script src="./main.js"></script>
 ```
 
-### CSS
+#### CSS
 ```hot
 !import[style; src: "./main"]
 ```

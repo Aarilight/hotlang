@@ -7,7 +7,7 @@ const expect = chai.expect;
 
 import fs = require("mz/fs");
 import mkdirp = require("mkdirp-promise");
-import rimraf = require("rmfr");
+import del = require("del");
 
 import Hot = require("../Hot");
 
@@ -150,12 +150,22 @@ describe("Hot", () => {
 			"secret/resources.hot": `
 				!import[style; src: "/test"]
 				!import[script; src: "/test"]
-			`
+			`,
+			"content/import-content.hot": `
+				!import[src: "./accept-content"]: div: "Hello, world!"
+				!import[src: "./accept-content"]: div: 
+					"Hello, world!"
+					"Hello, world!"
+			`,
+			"content/accept-content.hot": `span: !content`,
+			"content/helloworld.hot": `!import[src: "./hello"]: "world"`,
+			"content/hello.hot": `span:= "Hello, " !content "!"`
 		};
 
 		beforeEach(async () => {
 			const promises: Promise<any>[] = [];
 			await mkdirp("tests/secret/super-secret");
+			await mkdirp("tests/content");
 			for (const file in files)
 				promises.push(fs.writeFile(`tests/${file}`, files[file as keyof typeof files]));
 			await Promise.all(promises);
@@ -166,7 +176,7 @@ describe("Hot", () => {
 			for (const file in files)
 				promises.push(fs.unlink(`tests/${file}`));
 			await Promise.all(promises);
-			await rimraf("tests");
+			await del("tests");
 		});
 
 		it("should compile a file", async () => {
@@ -181,6 +191,18 @@ describe("Hot", () => {
 			const result = await fs.readFile("tests/import.html", "utf8");
 			await fs.unlink("tests/import.html");
 			expect(result).eq("<span>\n\tHello, world!\n</span>");
+		});
+
+		it("should import other files and pass any content in to them", async () => {
+			await Hot.compile("tests/content/import-content.hot");
+			let result = await fs.readFile("tests/content/import-content.html", "utf8");
+			await fs.unlink("tests/content/import-content.html");
+			expect(result).eq("<span>\n\t<div>\n\t\tHello, world!\n\t</div>\n</span>\n<span>\n\t<div>\n\t\tHello, world!\n\t\tHello, world!\n\t</div>\n</span>");
+
+			await Hot.compile("tests/content/helloworld.hot");
+			result = await fs.readFile("tests/content/helloworld.html", "utf8");
+			await fs.unlink("tests/content/helloworld.html");
+			expect(result).eq("<span>Hello, world!</span>");
 		});
 
 		it("should compile a folder of files", async () => {

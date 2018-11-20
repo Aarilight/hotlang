@@ -2,11 +2,11 @@
 
 let debug = false;
 
+import commondir = require("commondir");
+import glob = require("glob-promise");
+import mkdirp = require("mkdirp-promise");
 import fs = require("mz/fs");
 import path = require("path");
-import glob = require("glob-promise");
-import commondir = require("commondir");
-import mkdirp = require("mkdirp-promise");
 
 function tabbify (str: string, amount = 1) {
 	return str.replace(/^|(\n)/g, "$1\t");
@@ -81,6 +81,7 @@ class Hot {
 	private file: string;
 	private outFile: string;
 	private config: Hot.Config;
+	private options: Hot.HotParseOptions = {};
 
 	constructor(config?: Hot.Config) {
 		this.config = config;
@@ -92,20 +93,21 @@ class Hot {
 		return true;
 	}
 
-	public async parse (hotText?: string) {
+	public async parse (hotText?: string, options: Hot.HotParseOptions = {}) {
 		if (hotText) this.input = hotText;
 		this.line = 0;
 		this.index = 0;
 		this.indent = 0;
+		this.options = options;
 		return (await this.parseChildren(-1)).replace(/\r/g, "");
 	}
-	public async compile (out?: string, writeFile = true) {
+	public async compile (out?: string, writeFile = true, options?: Hot.HotParseOptions) {
 		if (!out) {
 			if (!this.file && writeFile) throw new Error("Cannot compile automatically, no filename to compile to.");
 			out = replaceExt(this.file, "html");
 		}
 		this.outFile = out;
-		const result = await this.parse();
+		const result = await this.parse(undefined, options);
 		if (writeFile) {
 			await mkdirp(path.dirname(out));
 			await fs.writeFile(out, result);
@@ -341,6 +343,9 @@ class Hot {
 		const variableName = this.extract(Regex.Word);
 		const attributes = await this.parseAttributes();
 		switch (variableName) {
+			case "content": {
+				return this.options.importContent || "";
+			}
 			case "import": {
 				const args = attributes as ImportArgs;
 				let importPath = args.src;
@@ -382,7 +387,16 @@ class Hot {
 						if (!this.file)
 							throw new Error("Can't import a hot file when parsing a hot string.");
 
-						const files = await glob(importPath, { cwd: importPath, absolute: true });
+						const files = await glob(importPath, { cwd: importPath, absolute: true } as any);
+
+						let importContent = "";
+						if (files.length) {
+							if (this.consumeChar(Char.ElementChildren)) {
+								const child = this.consumeChar(Char.ElementChild);
+								const content = await this.parseChildren(this.indent, "");
+								importContent += child ? content.trim() : content;
+							}
+						}
 
 						let result = "";
 						for (const file of files) {
@@ -394,7 +408,7 @@ class Hot {
 							const relativeOutPath = path.relative(srcRoot, replaceExt(file, "html"));
 							const outPath = path.resolve(srcRoot, "./" + (this.config.outDir || ""), relativeOutPath);
 
-							let fileResult = await hot.compile(outPath, !!(this.config.compileAll && this.outFile));
+							let fileResult = await hot.compile(outPath, !!(this.config.compileAll && this.outFile), { importContent });
 							if ("template" in args) {
 								fileResult = `<template${resultAttributes}>${fileResult}</template>`;
 							}
@@ -433,7 +447,7 @@ module Hot {
 
 				for (const config of configs as Config[]) {
 					const files = config.files ?
-						await glob(config.files, { cwd: compilePath, absolute: true })
+						await glob(config.files, { cwd: compilePath, absolute: true } as any)
 						: [path.resolve(compilePath, config.file)];
 					if (files.length > 0) {
 						// files is an array of filenames to compile
@@ -490,6 +504,10 @@ module Hot {
 		compileAll?: true;
 		srcRoot?: string;
 	};
+
+	export interface HotParseOptions {
+		importContent?: string;
+	}
 }
 
 export = Hot;
